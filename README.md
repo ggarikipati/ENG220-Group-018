@@ -1,14 +1,13 @@
-# Team 18 Air quality funding
+# Team 18 Air quality funding Project
 
 # Authors:
 
-Abdullah Jarawan
-Ahmad Alazmi
-Mubarak Fhid
-Mohammad Alazemi
-Meshal Alazmi
-Faisal Alrashdan
-
+- Abdullah Jarawan
+- Ahmad Alazmi
+- Mubarak Fhid
+- Mohammad Alazemi
+- Meshal Alazmi
+- Faisal Alrashdan
 
 # Air Quality and Finance Visualizations
 
@@ -29,8 +28,7 @@ This Streamlit app provides comprehensive visualizations for air quality and fin
     - [Air Quality Applications](#air-quality-applications)
     - [Awards Granted](#awards-granted)
     - [EPA Budget](#epa-budget)
-- [Contributing](#contributing)
-- [License](#license)
+
 
 ## Overview
 
