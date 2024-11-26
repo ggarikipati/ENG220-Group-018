@@ -247,19 +247,32 @@ def visualize_awards():
 def visualize_budget():
     budget_data = load_budget_data()
     
+    # Sort data by fiscal year in ascending order
+    budget_data = budget_data.sort_values(by='Fiscal Year', ascending=True)
+    
     st.write("### EPA Budget Data")
     st.dataframe(budget_data)
     
-    plot_bar_chart(budget_data, 'Fiscal Year', 'Enacted Budget', 
-                   'EPA Budget Over the Years', 'Fiscal Year', 'Enacted Budget ($)')
+    # Budget Trend
+    plt.figure(figsize=(12, 6))
+    plt.bar(budget_data['Fiscal Year'], budget_data['Enacted Budget'], color='skyblue')
+    plt.xlabel('Fiscal Year')
+    plt.ylabel('Enacted Budget ($)')
+    plt.title('EPA Budget Over the Years')
+    plt.xticks(rotation=90)
+    plt.grid(True)
+    st.pyplot(plt)
     
+    # Workforce Trend
     plt.figure(figsize=(12, 6))
     plt.plot(budget_data['Fiscal Year'], budget_data['Workforce'], marker='o', color='orange')
     plt.xlabel('Fiscal Year')
     plt.ylabel('Workforce')
     plt.title('EPA Workforce Over the Years')
+    plt.xticks(rotation=90)
     plt.grid(True)
     st.pyplot(plt)
+
 
 # Load data for both cities and counties
 city_data = load_city_data()
