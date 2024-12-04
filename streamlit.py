@@ -38,7 +38,7 @@ st.sidebar.markdown("""
 
 # Function to load air quality applications data
 def load_applications_data():
-    url = 'https://github.com/Alrashdan906/ENG220-Group-18/blob/main/datasets/finance/airqualityapplications2024.csv?raw=true'
+    url = 'https://github.com/Ahhfjarawan3/ENG-220-MATLAB-PROJECTS/blob/main/datasets/finance/airqualityapplications2024.csv?raw=true'
     data = pd.read_csv(url)
     data.columns = [col.strip() for col in data.columns]  # Strip any extra spaces from column names
     data['Proposed EPA Funding'] = data['Proposed EPA Funding'].replace('[\$,]', '', regex=True).astype(float) * 1000  # Clean funding values and convert to actual
@@ -46,21 +46,21 @@ def load_applications_data():
 
 # Function to load awards granted data
 def load_awards_data():
-    url = 'https://github.com/Alrashdan906/ENG220-Group-18/blob/main/datasets/finance/AirQualityDirectAwards2022.csv?raw=true'
+    url = 'https://github.com/Ahhfjarawan3/ENG-220-MATLAB-PROJECTS/blob/main/datasets/finance/AirQualityDirectAwards2022.csv?raw=true'
     data = pd.read_csv(url)
     data['Amount Awarded'] = data['Amount Awarded'].replace('[\$,]', '', regex=True).astype(float) * 1000  # Convert to actual
     return data
 
 # Function to load EPA budget data
 def load_budget_data():
-    url = 'https://github.com/Alrashdan906/ENG220-Group-18/blob/main/datasets/finance/EPAbudget.csv?raw=true'
+    url = 'https://github.com/Ahhfjarawan3/ENG-220-MATLAB-PROJECTS/blob/main/datasets/finance/EPAbudget.csv?raw=true'
     data = pd.read_csv(url)
     data['Enacted Budget'] = data['Enacted Budget'].replace('[\$,]', '', regex=True).astype(float) * 1000  # Convert to actual
     return data
 
 # Function to load the cleaned city CSV dataset
 def load_city_data():
-    url = 'https://github.com/Alrashdan906/ENG220-Group-18/blob/main/datasets/airqualitybycity2000-2023.csv?raw=true'
+    url = 'https://github.com/Ahhfjarawan3/ENG-220-MATLAB-PROJECTS/blob/30664fb22520cf1fbdab0ecaf20734a4932ad18f/datasets/airqualitybycity2000-2023.csv?raw=true'
     city_data = pd.read_csv(url)
     # Fill forward the CBSA and Core Based Statistical Area columns to handle empty values
     city_data['CBSA'].fillna(method='ffill', inplace=True)
@@ -70,12 +70,12 @@ def load_city_data():
 # Function to load national trend data for a given pollutant
 def load_national_trend_data(pollutant):
     urls = {
-        'CO': 'https://github.com/Alrashdan906/ENG220-Group-18/blob/main/datasets/National_trend/Carbon_MonoxideNational.csv?raw=true',
-        'NO2': 'https://github.com/Alrashdan906/ENG220-Group-18/blob/main/datasets/National_trend/Nitrogen_DioxideNational.csv?raw=true',
-        'O3': 'https://github.com/Alrashdan906/ENG220-Group-18/blob/main/datasets/National_trend/OzoneNational.csv?raw=true',
-        'PM10': 'https://github.com/Alrashdan906/ENG220-Group-18/blob/main/datasets/National_trend/PM10National.csv?raw=true',
-        'PM25': 'https://github.com/Alrashdan906/ENG220-Group-18/blob/main/datasets/National_trend/PM25National.csv?raw=true',
-        'SO2': 'https://github.com/Alrashdan906/ENG220-Group-18/blob/main/datasets/National_trend/Sulfur_DioxideNational.csv?raw=true'
+        'CO': 'https://github.com/Ahhfjarawan3/ENG-220-MATLAB-PROJECTS/blob/main/datasets/National%20trend%20USA/Carbon_MonoxideNational.csv?raw=true',
+        'NO2': 'https://github.com/Ahhfjarawan3/ENG-220-MATLAB-PROJECTS/blob/main/datasets/National%20trend%20USA/Nitrogen_DioxideNational.csv?raw=true',
+        'O3': 'https://github.com/Ahhfjarawan3/ENG-220-MATLAB-PROJECTS/blob/main/datasets/National%20trend%20USA/OzoneNational.csv?raw=true',
+        'PM10': 'https://github.com/Ahhfjarawan3/ENG-220-MATLAB-PROJECTS/blob/main/datasets/National%20trend%20USA/PM10National.csv?raw=true',
+        'PM25': 'https://github.com/Ahhfjarawan3/ENG-220-MATLAB-PROJECTS/blob/main/datasets/National%20trend%20USA/PM25National.csv?raw=true',
+        'SO2': 'https://github.com/Ahhfjarawan3/ENG-220-MATLAB-PROJECTS/blob/main/datasets/National%20trend%20USA/Sulfur_DioxideNational.csv?raw=true'
     }
     url = urls[pollutant]
     data = pd.read_csv(url)
@@ -114,7 +114,7 @@ def plot_city_pollutants(city_data, city_info):
 
 # Function to load and clean all county datasets
 def load_and_clean_county_data():
-    base_url = "https://github.com/Alrashdan906/ENG220-Group-18/tree/main/datasets/county_datasets/conreport"
+    base_url = "https://github.com/Ahhfjarawan3/ENG-220-MATLAB-PROJECTS/blob/ace503643ae54f6486fe708d856a01c95961489e/datasets/county_datasets/conreport"
     all_data = []
 
     for year in range(2000, 2023 + 1):
@@ -247,32 +247,19 @@ def visualize_awards():
 def visualize_budget():
     budget_data = load_budget_data()
     
-    # Sort data by fiscal year in ascending order
-    budget_data = budget_data.sort_values(by='Fiscal Year', ascending=True)
-    
     st.write("### EPA Budget Data")
     st.dataframe(budget_data)
     
-    # Budget Trend
-    plt.figure(figsize=(12, 6))
-    plt.bar(budget_data['Fiscal Year'], budget_data['Enacted Budget'], color='skyblue')
-    plt.xlabel('Fiscal Year')
-    plt.ylabel('Enacted Budget ($)')
-    plt.title('EPA Budget Over the Years')
-    plt.xticks(rotation=90)
-    plt.grid(True)
-    st.pyplot(plt)
+    plot_bar_chart(budget_data, 'Fiscal Year', 'Enacted Budget', 
+                   'EPA Budget Over the Years', 'Fiscal Year', 'Enacted Budget ($)')
     
-    # Workforce Trend
     plt.figure(figsize=(12, 6))
     plt.plot(budget_data['Fiscal Year'], budget_data['Workforce'], marker='o', color='orange')
     plt.xlabel('Fiscal Year')
     plt.ylabel('Workforce')
     plt.title('EPA Workforce Over the Years')
-    plt.xticks(rotation=90)
     plt.grid(True)
     st.pyplot(plt)
-
 
 # Load data for both cities and counties
 city_data = load_city_data()
