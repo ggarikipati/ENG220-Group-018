@@ -60,7 +60,7 @@ def load_budget_data():
 
 # Function to load the cleaned city CSV dataset
 def load_city_data():
-    url = 'https://github.com/Ahhfjarawan3/ENG-220-MATLAB-PROJECTS/blob/30664fb22520cf1fbdab0ecaf20734a4932ad18f/datasets/airqualitybycity2000-2023.csv?raw=true'
+    url = 'https://github.com/Alrashdan906/ENG220-Group-18/blob/main/datasets/airqualitybycity2000-2023.csv?raw=true'
     city_data = pd.read_csv(url)
     # Fill forward the CBSA and Core Based Statistical Area columns to handle empty values
     city_data['CBSA'].fillna(method='ffill', inplace=True)
@@ -70,12 +70,12 @@ def load_city_data():
 # Function to load national trend data for a given pollutant
 def load_national_trend_data(pollutant):
     urls = {
-        'CO': 'https://github.com/Ahhfjarawan3/ENG-220-MATLAB-PROJECTS/blob/main/datasets/National%20trend%20USA/Carbon_MonoxideNational.csv?raw=true',
-        'NO2': 'https://github.com/Ahhfjarawan3/ENG-220-MATLAB-PROJECTS/blob/main/datasets/National%20trend%20USA/Nitrogen_DioxideNational.csv?raw=true',
-        'O3': 'https://github.com/Ahhfjarawan3/ENG-220-MATLAB-PROJECTS/blob/main/datasets/National%20trend%20USA/OzoneNational.csv?raw=true',
-        'PM10': 'https://github.com/Ahhfjarawan3/ENG-220-MATLAB-PROJECTS/blob/main/datasets/National%20trend%20USA/PM10National.csv?raw=true',
-        'PM25': 'https://github.com/Ahhfjarawan3/ENG-220-MATLAB-PROJECTS/blob/main/datasets/National%20trend%20USA/PM25National.csv?raw=true',
-        'SO2': 'https://github.com/Ahhfjarawan3/ENG-220-MATLAB-PROJECTS/blob/main/datasets/National%20trend%20USA/Sulfur_DioxideNational.csv?raw=true'
+        'CO': 'https://github.com/Alrashdan906/ENG220-Group-18/blob/main/datasets/National_trend/Carbon_MonoxideNational.csv?raw=true',
+        'NO2': 'https://github.com/Alrashdan906/ENG220-Group-18/blob/main/datasets/National_trend/Nitrogen_DioxideNational.csv?raw=true',
+        'O3': 'https://github.com/Alrashdan906/ENG220-Group-18/blob/main/datasets/National_trend/OzoneNational.csv?raw=true',
+        'PM10': 'https://github.com/Alrashdan906/ENG220-Group-18/blob/main/datasets/National_trend/PM10National.csv?raw=true',
+        'PM25': 'https://github.com/Alrashdan906/ENG220-Group-18/blob/main/datasets/National_trend/PM25National.csv?raw=true',
+        'SO2': 'https://github.com/Alrashdan906/ENG220-Group-18/blob/main/datasets/National_trend/Sulfur_DioxideNational.csv?raw=true'
     }
     url = urls[pollutant]
     data = pd.read_csv(url)
