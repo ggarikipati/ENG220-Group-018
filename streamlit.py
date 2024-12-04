@@ -38,7 +38,7 @@ st.sidebar.markdown("""
 
 # Function to load air quality applications data
 def load_applications_data():
-    url = 'https://github.com/Ahhfjarawan3/ENG-220-MATLAB-PROJECTS/blob/main/datasets/finance/airqualityapplications2024.csv?raw=true'
+    url = 'https://github.com/Alrashdan906/ENG220-Group-18/blob/main/datasets/finance/airqualityapplications2024.csv?raw=true'
     data = pd.read_csv(url)
     data.columns = [col.strip() for col in data.columns]  # Strip any extra spaces from column names
     data['Proposed EPA Funding'] = data['Proposed EPA Funding'].replace('[\$,]', '', regex=True).astype(float) * 1000  # Clean funding values and convert to actual
@@ -46,14 +46,14 @@ def load_applications_data():
 
 # Function to load awards granted data
 def load_awards_data():
-    url = 'https://github.com/Ahhfjarawan3/ENG-220-MATLAB-PROJECTS/blob/main/datasets/finance/AirQualityDirectAwards2022.csv?raw=true'
+    url = 'https://github.com/Alrashdan906/ENG220-Group-18/blob/main/datasets/finance/AirQualityDirectAwards2022.csv?raw=true'
     data = pd.read_csv(url)
     data['Amount Awarded'] = data['Amount Awarded'].replace('[\$,]', '', regex=True).astype(float) * 1000  # Convert to actual
     return data
 
 # Function to load EPA budget data
 def load_budget_data():
-    url = 'https://github.com/Ahhfjarawan3/ENG-220-MATLAB-PROJECTS/blob/main/datasets/finance/EPAbudget.csv?raw=true'
+    url = 'https://github.com/Alrashdan906/ENG220-Group-18/blob/main/datasets/finance/EPAbudget.csv?raw=true'
     data = pd.read_csv(url)
     data['Enacted Budget'] = data['Enacted Budget'].replace('[\$,]', '', regex=True).astype(float) * 1000  # Convert to actual
     return data
