@@ -114,7 +114,7 @@ def plot_city_pollutants(city_data, city_info):
 
 # Function to load and clean all county datasets
 def load_and_clean_county_data():
-    base_url = "https://github.com/Ahhfjarawan3/ENG-220-MATLAB-PROJECTS/blob/ace503643ae54f6486fe708d856a01c95961489e/datasets/county_datasets/conreport"
+    base_url = "https://github.com/Alrashdan906/ENG220-Group-18/blob/main/datasets/county_datasets/conreport"
     all_data = []
 
     for year in range(2000, 2023 + 1):
@@ -230,7 +230,7 @@ def visualize_awards():
     regions = awards_data['EPA Region'].unique()
     selected_region = st.selectbox("Select an EPA Region", regions)
     
-    st.image('https://github.com/Ahhfjarawan3/ENG-220-MATLAB-PROJECTS/blob/main/datasets/eparegions.png?raw=true', caption='EPA Regions Map', use_column_width=True)
+    st.image('https://github.com/Alrashdan906/ENG220-Group-18/blob/main/eparegions.png?raw=true', caption='EPA Regions Map', use_column_width=True)
     
     filtered_data = filter_awards_by_region(awards_data, selected_region)
     
