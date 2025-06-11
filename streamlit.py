@@ -1,318 +1,190 @@
 import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
+import os
 
-# Title of the app
-st.title("Visualizations for Air Quality Projects")
+st.set_page_config(page_title="Group-018 | Air Quality Finance", layout="wide")
+st.title("Group-018: Air Quality Finance & Trends Dashboard")
 
-# Sidebar for baseline levels
-st.sidebar.markdown("### Baseline Air Quality Levels")
-st.sidebar.markdown("""
-- **<span style='color:green;'>Safe levels</span>**:
-  - **O3 (Ozone):** ≤ 100 µg/m³ (8-hour mean)
-  - **SO2 (Sulfur Dioxide):** ≤ 75 µg/m³ (1-hour mean)
-  - **PM2.5 (Fine Particulate Matter):** ≤ 5 µg/m³ (annual mean)
-  - **PM10 (Coarse Particulate Matter):** ≤ 15 µg/m³ (annual mean)
-  - **NO2 (Nitrogen Dioxide):** ≤ 40 µg/m³ (annual mean)
-  - **CO (Carbon Monoxide):** ≤ 9 ppm (8-hour mean)
-  - **Pb (Lead):** ≤ 0.15 µg/m³ (rolling 3-month average)
+st.markdown("""
+This project analyzes **funding, budgets, and pollutant trends** in air quality initiatives across the United States.  
+It explores:
+- City- and county-level air quality trends
+- National pollutant trends
+- EPA funding applications and awarded grants
+- Historical EPA budgets and workforce changes
+""")
 
-- **<span style='color:orange;'>Normal levels</span>**:
-  - **O3 (Ozone):** 100-150 µg/m³
-  - **SO2 (Sulfur Dioxide):** 75-150 µg/m³
-  - **PM2.5 (Fine Particulate Matter):** 5-15 µg/m³
-  - **PM10 (Coarse Particulate Matter):** 15-45 µg/m³
-  - **NO2 (Nitrogen Dioxide):** 40-80 µg/m³
-  - **CO (Carbon Monoxide):** 9-15 ppm
-  - **Pb (Lead):** 0.15-0.5 µg/m³
+# ============================
+# Utility Functions
+# ============================
+def load_csv_local(filename):
+    base_dir = os.path.dirname(__file__)
+    return pd.read_csv(os.path.join(base_dir, "datasets", filename))
 
-- **<span style='color:red;'>Dangerous levels</span>**:
-  - **O3 (Ozone):** > 150 µg/m³
-  - **SO2 (Sulfur Dioxide):** > 150 µg/m³
-  - **PM2.5 (Fine Particulate Matter):** > 15 µg/m³
-  - **PM10 (Coarse Particulate Matter):** > 45 µg/m³
-  - **NO2 (Nitrogen Dioxide):** > 80 µg/m³
-  - **CO (Carbon Monoxide):** > 15 ppm
-  - **Pb (Lead):** > 0.5 µg/m³
-""", unsafe_allow_html=True)
+def load_multiple_csvs(prefix, start_year, end_year):
+    dfs = []
+    for year in range(start_year, end_year + 1):
+        try:
+            df = load_csv_local(f"{prefix}{year}.csv")
+            df['Year'] = year
+            dfs.append(df)
+        except FileNotFoundError:
+            continue
+    return pd.concat(dfs, ignore_index=True)
 
-# Function to load air quality applications data
-def load_applications_data():
-    url = 'https://github.com/Alrashdan906/ENG220-Group-18/blob/main/datasets/finance/airqualityapplications2024.csv?raw=true'
-    data = pd.read_csv(url)
-    data.columns = [col.strip() for col in data.columns]  # Strip any extra spaces from column names
-    data['Proposed EPA Funding'] = data['Proposed EPA Funding'].replace('[\$,]', '', regex=True).astype(float) * 1000  # Clean funding values and convert to actual
-    return data
+# ============================
+# Load Data
+# ============================
+city_data = load_csv_local("airqualitybycity2000-2023.csv")
+city_data['CBSA'].fillna(method='ffill', inplace=True)
+city_data['Core Based Statistical Area'].fillna(method='ffill', inplace=True)
+city_data = city_data.dropna(subset=['Pollutant', 'Trend Statistic'])
 
-# Function to load awards granted data
-def load_awards_data():
-    url = 'https://github.com/Alrashdan906/ENG220-Group-18/blob/main/datasets/finance/AirQualityDirectAwards2022.csv?raw=true'
-    data = pd.read_csv(url)
-    data['Amount Awarded'] = data['Amount Awarded'].replace('[\$,]', '', regex=True).astype(float) * 1000  # Convert to actual
-    return data
+county_data = load_multiple_csvs("conreport", 2000, 2023)
+county_data.replace('.', pd.NA, inplace=True)
 
-# Function to load EPA budget data
-def load_budget_data():
-    url = 'https://github.com/Alrashdan906/ENG220-Group-18/blob/main/datasets/finance/EPAbudget.csv?raw=true'
-    data = pd.read_csv(url)
-    data['Enacted Budget'] = data['Enacted Budget'].replace('[\$,]', '', regex=True).astype(float) * 1000  # Convert to actual
-    return data
+applications_data = load_csv_local("airqualityapplications2024.csv")
+applications_data['Proposed EPA Funding'] = applications_data['Proposed EPA Funding'].replace('[\$,]', '', regex=True).astype(float) * 1000
 
-# Function to load the cleaned city CSV dataset
-def load_city_data():
-    url = 'https://github.com/Alrashdan906/ENG220-Group-18/blob/main/datasets/airqualitybycity2000-2023.csv?raw=true'
-    city_data = pd.read_csv(url)
-    # Fill forward the CBSA and Core Based Statistical Area columns to handle empty values
-    city_data['CBSA'].fillna(method='ffill', inplace=True)
-    city_data['Core Based Statistical Area'].fillna(method='ffill', inplace=True)
-    return city_data
+awards_data = load_csv_local("AirQualityDirectAwards2022.csv")
+awards_data['Amount Awarded'] = awards_data['Amount Awarded'].replace('[\$,]', '', regex=True).astype(float) * 1000
 
-# Function to load national trend data for a given pollutant
-def load_national_trend_data(pollutant):
-    urls = {
-        'CO': 'https://github.com/Alrashdan906/ENG220-Group-18/blob/main/datasets/National_trend/Carbon_MonoxideNational.csv?raw=true',
-        'NO2': 'https://github.com/Alrashdan906/ENG220-Group-18/blob/main/datasets/National_trend/Nitrogen_DioxideNational.csv?raw=true',
-        'O3': 'https://github.com/Alrashdan906/ENG220-Group-18/blob/main/datasets/National_trend/OzoneNational.csv?raw=true',
-        'PM10': 'https://github.com/Alrashdan906/ENG220-Group-18/blob/main/datasets/National_trend/PM10National.csv?raw=true',
-        'PM25': 'https://github.com/Alrashdan906/ENG220-Group-18/blob/main/datasets/National_trend/PM25National.csv?raw=true',
-        'SO2': 'https://github.com/Alrashdan906/ENG220-Group-18/blob/main/datasets/National_trend/Sulfur_DioxideNational.csv?raw=true'
+budget_data = load_csv_local("EPAbudget.csv")
+budget_data['Enacted Budget'] = budget_data['Enacted Budget'].replace('[\$,]', '', regex=True).astype(float) * 1000
+
+# ============================
+# Tabs
+# ============================
+tabs = st.tabs([
+    "City Trends", "County Trends", "Applications", "Awards", "Budget"
+])
+
+# ============================
+# Tab 1: City Trends
+# ============================
+with tabs[0]:
+    st.subheader("Air Quality by City (2000–2023)")
+
+    city_options = {
+        f"{row['CBSA']} - {row['Core Based Statistical Area']}": row['CBSA']
+        for _, row in city_data.iterrows()
     }
-    url = urls[pollutant]
-    data = pd.read_csv(url)
-    return data
+    selected_city_info = st.selectbox("Choose a city", list(city_options.keys()))
+    selected_cbsa = selected_city_info.split(" - ")[0]
+    selected_city_df = city_data[city_data['CBSA'] == selected_cbsa]
 
-# Preprocess city data to focus on required pollutants and trend statistics
-def preprocess_city_data(city_data):
-    filtered_data = city_data.dropna(subset=['Pollutant', 'Trend Statistic'])
-    return filtered_data
-
-# Function to plot pollutants for a selected city
-def plot_city_pollutants(city_data, city_info):
-    st.write(f"Selected City: {city_info}")
-    
-    city_cbs_code, city_name = city_info.split(" - ", 1)
-    city_data = city_data[city_data['CBSA'] == city_cbs_code]
-    st.write(f"Filtered Data for Selected City ({city_name}):", city_data)
-    
-    years = [str(year) for year in range(2000, 2023 + 1)]
-    
+    st.write("#### Pollutant Trend Graph")
+    years = [str(year) for year in range(2000, 2024)]
     plt.figure(figsize=(12, 6))
-    
-    for index, row in city_data.iterrows():
+    for _, row in selected_city_df.iterrows():
         pollutant = row['Pollutant']
-        statistic = row['Trend Statistic']
-        data_values = pd.to_numeric(row[4:], errors='coerce').fillna(0)
-        
-        plt.plot(years, data_values, label=f'{pollutant} ({statistic})')
-    
+        stat = row['Trend Statistic']
+        values = pd.to_numeric(row[4:], errors='coerce').fillna(0)
+        plt.plot(years, values, label=f'{pollutant} ({stat})')
     plt.xlabel('Year')
-    plt.ylabel('Pollutant Level')
-    plt.title(f'Pollutant Trends in {city_name} (2000-2023)')
-    plt.legend()
+    plt.ylabel('Level')
+    plt.title(f"Trends for {selected_city_info}")
     plt.grid(True)
+    plt.legend()
     st.pyplot(plt)
 
-# Function to load and clean all county datasets
-def load_and_clean_county_data():
-    base_url = "https://github.com/Alrashdan906/ENG220-Group-18/blob/main/datasets/county_datasets/conreport"
-    all_data = []
+# ============================
+# Tab 2: County Trends
+# ============================
+with tabs[1]:
+    st.subheader("Air Quality by County")
 
-    for year in range(2000, 2023 + 1):
-        url = f"{base_url}{year}.csv?raw=true"
-        
-        df = pd.read_csv(url)
-        df.replace('.', pd.NA, inplace=True)
-        df['Year'] = year
-        all_data.append(df)
-    
-    merged_data = pd.concat(all_data, ignore_index=True)
-    return merged_data
+    county_names = county_data['County'].dropna().unique()
+    selected_county = st.selectbox("Choose a county", county_names)
+    county_df = county_data[county_data['County'] == selected_county]
 
-# Function to check if there is enough data to plot
-def has_enough_data(data, pollutant):
-    return data[pollutant].count() >= 3
+    pollutant_options = [col for col in county_df.columns if col not in ['County Code', 'County', 'Year']]
+    selected_pollutant = st.selectbox("Choose pollutant", pollutant_options)
 
-# Function to plot pollutants for a selected county and pollutant
-def plot_county_pollutant(data, pollutant):
-    data = data[['Year', pollutant]].dropna()
-    
-    if not has_enough_data(data, pollutant):
-        st.write("No data available for this pollutant in the selected county.")
-    else:
+    plot_df = county_df[['Year', selected_pollutant]].dropna()
+    if plot_df.shape[0] >= 3:
         plt.figure(figsize=(12, 6))
-        plt.plot(data['Year'], data[pollutant], marker='o')
-        plt.xlabel('Year')
-        plt.ylabel(f'{pollutant} Level')
-        plt.title(f'Trend of {pollutant} in {selected_county} (2000-2023)')
+        plt.plot(plot_df['Year'], plot_df[selected_pollutant], marker='o')
+        plt.title(f"{selected_pollutant} in {selected_county} (2000–2023)")
+        plt.xlabel("Year")
+        plt.ylabel("Level")
         plt.grid(True)
         st.pyplot(plt)
-        
-        st.write("Data for selected pollutant and county:")
-        st.dataframe(data.set_index('Year'))
+    else:
+        st.warning("Insufficient data for this pollutant.")
 
-# Function to plot national trend data for a selected pollutant
-def plot_national_trend(pollutant):
-    data = load_national_trend_data(pollutant)
-    
-    plt.figure(figsize=(12, 6))
-    plt.plot(data['Year'], data['Mean'], label='Mean', marker='o')
-    plt.plot(data['Year'], data['10th Percentile'], label='10th Percentile', marker='o')
-    plt.plot(data['Year'], data['90th Percentile'], label='90th Percentile', marker='o')
-    
-    plt.xlabel('Year')
-    plt.ylabel(data['Units'].iloc[0])
-    plt.title(f'National Trend of {pollutant} (2000-2023)')
-    plt.legend()
-    plt.grid(True)
-    st.pyplot(plt)
-    
-    st.write("Data for selected pollutant:")
-    st.dataframe(data.set_index('Year'))
+# ============================
+# Tab 3: Applications
+# ============================
+with tabs[2]:
+    st.subheader("EPA Air Quality Applications (2024)")
 
-# Function to plot bar chart
-def plot_bar_chart(data, x, y, title, x_label, y_label):
-    plt.figure(figsize=(12, 6))
-    plt.bar(data[x], data[y], color='skyblue')
-    plt.xlabel(x_label)
-    plt.ylabel(y_label)
-    plt.title(title)
-    plt.xticks(rotation=90)
-    plt.grid(True)
-    st.pyplot(plt)
-
-# Convert state abbreviations to full state names
-STATE_ABBR = {
-    "AL": "Alabama", "AK": "Alaska", "AZ": "Arizona", "AR": "Arkansas", "CA": "California",
-    "CO": "Colorado", "CT": "Connecticut", "DE": "Delaware", "FL": "Florida", "GA": "Georgia",
-    "HI": "Hawaii", "ID": "Idaho", "IL": "Illinois", "IN": "Indiana", "IA": "Iowa", "KS": "Kansas",
-    "KY": "Kentucky", "LA": "Louisiana", "ME": "Maine", "MD": "Maryland", "MA": "Massachusetts",
-    "MI": "Michigan", "MN": "Minnesota", "MS": "Mississippi", "MO": "Missouri", "MT": "Montana",
-    "NE": "Nebraska", "NV": "Nevada", "NH": "New Hampshire", "NJ": "New Jersey", "NM": "New Mexico",
-    "NY": "New York", "NC": "North Carolina", "ND": "North Dakota", "OH": "Ohio", "OK": "Oklahoma",
-    "OR": "Oregon", "PA": "Pennsylvania", "RI": "Rhode Island", "SC": "South Carolina", "SD": "South Dakota",
-    "TN": "Tennessee", "TX": "Texas", "UT": "Utah", "VT": "Vermont", "VA": "Virginia", "WA": "Washington",
-    "WV": "West Virginia", "WI": "Wisconsin", "WY": "Wyoming", "DC": "District of Columbia"
-}
-
-# Function to filter applications data by state
-def filter_applications_by_state(data, state_abbrs):
-    pattern = '|'.join(state_abbrs)
-    return data[data['Project State(s)'].str.contains(pattern)]
-
-# Visualization for Air Quality Applications
-def visualize_applications():
-    applications_data = load_applications_data()
     all_states = set()
     applications_data['Project State(s)'].str.split(', ').apply(all_states.update)
-    
-    states_full = [STATE_ABBR.get(state, state) for state in all_states if state in STATE_ABBR]
-    selected_state = st.selectbox("Select a State", sorted(states_full))
-    selected_state_abbrs = [abbr for abbr, full in STATE_ABBR.items() if full == selected_state]
-    
-    filtered_data = filter_applications_by_state(applications_data, selected_state_abbrs)
-    
-    st.write("### Applications Data")
-    st.dataframe(filtered_data)
-    
-    plot_bar_chart(filtered_data, 'Primary Applicant', 'Proposed EPA Funding', 
-                   f'Proposed EPA Funding for {selected_state}', 'Primary Applicant', 'Proposed EPA Funding ($)')
-    
-    total_funding = filtered_data['Proposed EPA Funding'].sum()
-    st.write(f"### Total Proposed EPA Funding for {selected_state}: ${total_funding:,.2f}")
+    state_list = sorted(list(all_states))
+    selected_state = st.selectbox("Select State", state_list)
 
-# Function to filter awards data by EPA region
-def filter_awards_by_region(data, region):
-    return data[data['EPA Region'] == region]
+    filtered_app = applications_data[
+        applications_data['Project State(s)'].str.contains(selected_state, na=False)
+    ]
+    st.write("### Applications Table")
+    st.dataframe(filtered_app)
 
-# Visualization for Awards Granted in 2022
-def visualize_awards():
-    awards_data = load_awards_data()
-    regions = awards_data['EPA Region'].unique()
-    selected_region = st.selectbox("Select an EPA Region", regions)
-    
-    st.image('https://github.com/Alrashdan906/ENG220-Group-18/blob/main/eparegions.png?raw=true', caption='EPA Regions Map', use_column_width=True)
-    
-    filtered_data = filter_awards_by_region(awards_data, selected_region)
-    
-    st.write("### Awards Data")
-    st.dataframe(filtered_data)
-    
-    plot_bar_chart(filtered_data, 'Grant Recipient', 'Amount Awarded', 
-                   f'Amount Awarded in EPA Region {selected_region}', 'Grant Recipient', 'Amount Awarded ($)')
-    
-    total_awarded = filtered_data['Amount Awarded'].sum()
-    st.write(f"### Total Amount Awarded in EPA Region {selected_region}: ${total_awarded:,.2f}")
+    if not filtered_app.empty:
+        st.write(f"### Total Proposed Funding: ${filtered_app['Proposed EPA Funding'].sum():,.0f}")
+        top_applicants = filtered_app.sort_values(by='Proposed EPA Funding', ascending=False).head(10)
+        plt.figure(figsize=(12, 6))
+        plt.bar(top_applicants['Primary Applicant'], top_applicants['Proposed EPA Funding'])
+        plt.xticks(rotation=45, ha='right')
+        plt.ylabel("Funding ($)")
+        plt.title(f"Top Applicants in {selected_state}")
+        plt.grid(True)
+        st.pyplot(plt)
 
-# Visualization for EPA Budget from 2000-2023
-def visualize_budget():
-    budget_data = load_budget_data()
-    
-    st.write("### EPA Budget Data")
+# ============================
+# Tab 4: Awards
+# ============================
+with tabs[3]:
+    st.subheader("Grants Awarded (2022) by EPA Region")
+
+    regions = awards_data['EPA Region'].dropna().unique()
+    selected_region = st.selectbox("Select EPA Region", sorted(regions))
+
+    filtered_awards = awards_data[awards_data['EPA Region'] == selected_region]
+    st.dataframe(filtered_awards)
+
+    if not filtered_awards.empty:
+        st.write(f"### Total Awarded: ${filtered_awards['Amount Awarded'].sum():,.0f}")
+        top_awards = filtered_awards.sort_values(by='Amount Awarded', ascending=False).head(10)
+        plt.figure(figsize=(12, 6))
+        plt.bar(top_awards['Grant Recipient'], top_awards['Amount Awarded'])
+        plt.xticks(rotation=45, ha='right')
+        plt.title(f"Top Grant Recipients in Region {selected_region}")
+        plt.ylabel("Awarded ($)")
+        plt.grid(True)
+        st.pyplot(plt)
+
+# ============================
+# Tab 5: Budget
+# ============================
+with tabs[4]:
+    st.subheader("EPA Budget & Workforce (2000–2023)")
+
     st.dataframe(budget_data)
-    
-    plot_bar_chart(budget_data, 'Fiscal Year', 'Enacted Budget', 
-                   'EPA Budget Over the Years', 'Fiscal Year', 'Enacted Budget ($)')
-    
+
     plt.figure(figsize=(12, 6))
-    plt.plot(budget_data['Fiscal Year'], budget_data['Workforce'], marker='o', color='orange')
-    plt.xlabel('Fiscal Year')
-    plt.ylabel('Workforce')
-    plt.title('EPA Workforce Over the Years')
+    plt.bar(budget_data['Fiscal Year'], budget_data['Enacted Budget'], color='skyblue')
+    plt.title("EPA Enacted Budget Over Time")
+    plt.xlabel("Fiscal Year")
+    plt.ylabel("Budget ($)")
     plt.grid(True)
     st.pyplot(plt)
 
-# Load data for both cities and counties
-city_data = load_city_data()
-city_data = preprocess_city_data(city_data)
-county_data = load_and_clean_county_data()
-
-# Create tabs for visualizations
-tabs = st.tabs(["City Visualization", "County Visualization", "National Trends", "Air Quality Applications", "Awards Granted", "EPA Budget"])
-
-with tabs[0]:
-    st.markdown("### City Information")
-    
-    city_options_dict = {f"{row['CBSA']} - {row['Core Based Statistical Area']}": row['CBSA'] for _, row in city_data.iterrows()}
-    city_options = list(city_options_dict.keys())
-    selected_city_info = st.selectbox("Choose a city", city_options)
-    
-    st.markdown("---")  # Separator
-    
-    st.markdown("### City Pollutant Graph")
-    plot_city_pollutants(city_data, selected_city_info)
-
-with tabs[1]:
-    st.markdown("### County Information")
-    
-    county_options = county_data['County'].unique()
-    selected_county = st.selectbox("Choose a county", county_options)
-    pollutant_options = county_data.columns[2:-1]  # Exclude 'County Code', 'County', and 'Year'
-    selected_pollutant = st.selectbox("Choose a pollutant", pollutant_options)
-    
-    st.markdown("---")  # Separator
-    
-    st.markdown("### County Pollutant Graph")
-    plot_county_pollutant(county_data[county_data['County'] == selected_county], selected_pollutant)
-
-with tabs[2]:
-    st.markdown("### National Trends of Air Quality")
-    
-    national_pollutants = ['CO', 'NO2', 'O3', 'PM10', 'PM25', 'SO2']
-    selected_national_pollutant = st.selectbox("Choose a pollutant", national_pollutants)
-    
-    st.markdown("---")  # Separator
-    
-    st.markdown(f"### National Trend Graph for {selected_national_pollutant}")
-    plot_national_trend(selected_national_pollutant)
-
-with tabs[3]:
-    st.markdown("## Air Quality Applications and Funding")
-    visualize_applications()
-
-with tabs[4]:
-    st.markdown("## Awards Granted in 2022")
-    visualize_awards()
-
-with tabs[5]:
-    st.markdown("## EPA Budget from 2000-2023")
-    visualize_budget()
+    plt.figure(figsize=(12, 6))
+    plt.plot(budget_data['Fiscal Year'], budget_data['Workforce'], marker='o', color='orange')
+    plt.title("EPA Workforce Over Time")
+    plt.xlabel("Fiscal Year")
+    plt.ylabel("Number of Employees")
+    plt.grid(True)
+    st.pyplot(plt)
