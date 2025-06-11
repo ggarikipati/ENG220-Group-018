@@ -3,8 +3,8 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import os
 
-st.set_page_config(page_title="Group-018: Air Quality Trends", layout="wide")
-st.title("Group-018: Air Quality & Environmental Funding Dashboard")
+
+st.title("Group-018")
 
 st.markdown("""
 This dashboard explores air quality trends in U.S. cities and counties from 2000 to 2023.  
